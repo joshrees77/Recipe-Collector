@@ -23,6 +23,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secret in production
 db = SQLAlchemy(app)
 
+# Initialize the database
+with app.app_context():
+    db.create_all()
+    print("Database initialized successfully.")
+
 ADMIN_PASSWORD = os.environ.get('RECIPE_ADMIN_PASSWORD', 'changeme')  # Set in your environment for security
 
 class Recipe(db.Model):
@@ -356,6 +361,4 @@ def edit_recipe(recipe_id):
     return render_template('edit_recipe.html', recipe=recipe)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=8080) 
