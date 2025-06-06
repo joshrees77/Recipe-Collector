@@ -8,6 +8,7 @@ import re
 import os
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+import subprocess
 load_dotenv()
 
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
@@ -16,7 +17,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///recipes.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///recipes.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secret in production
@@ -209,6 +210,33 @@ def recipe_detail(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     return render_template('recipe_detail.html', recipe=recipe)
 
+# Function to attempt to commit and push the database file
+def commit_and_push_db():
+    db_path = 'recipes.db' # Adjust if your db is elsewhere
+    try:
+        # Ensure git is initialized and configured (manual step on server!)
+        # This assumes you have git installed and configured on the server
+        # And that you are in a git repository
+
+        subprocess.run(['git', 'add', db_path], check=True)
+        result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
+
+        # Check if there was anything to commit
+        if "nothing to commit" in result.stdout.lower():
+             print("No database changes to commit.")
+        else:
+            subprocess.run(['git', 'push', 'origin', 'main'], check=True) # Adjust 'main' if your branch is different
+            print("Successfully committed and pushed database.")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Git command failed: {e}")
+        print(f"Stdout: {e.stdout}")
+        print(f"Stderr: {e.stderr}")
+    except FileNotFoundError:
+        print("Git command not found. Is Git installed on the server?")
+    except Exception as e:
+        print(f"An error occurred during git operations: {e}")
+
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
     if not session.get('logged_in'):
@@ -244,6 +272,14 @@ def add_recipe():
         )
         db.session.add(recipe)
         db.session.commit()
+        
+        # *** WARNING: Attempting to commit and push DB file - NOT RECOMMENDED ***
+        # This is unreliable and has significant drawbacks (data loss on deploy, git issues, security)
+        # You MUST manually set up git on the server for this to have any chance of working.
+        # The database file on the server is still ephemeral and will be lost on redeploy.
+        commit_and_push_db() # Call the function after saving the recipe
+        # *************************************************************************
+
         return redirect(url_for('recipes'))
     except Exception as e:
         return jsonify({'error': str(e)}), 400
