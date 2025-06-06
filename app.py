@@ -39,35 +39,8 @@ if not os.path.exists(db_dir):
 
 db = SQLAlchemy(app)
 
-# Initialize the database
-with app.app_context():
-    try:
-        # Get the absolute path where the database will be created
-        print(f"Attempting to create database at: {DB_PATH}")
-        
-        # Check if we can write to the directory
-        if os.access(db_dir, os.W_OK):
-            print(f"Directory {db_dir} is writable")
-        else:
-            print(f"WARNING: Directory {db_dir} is NOT writable!")
-        
-        # Create the database
-        db.create_all()
-        
-        # Verify the database was created
-        if os.path.exists(DB_PATH):
-            print(f"Database file created successfully at: {DB_PATH}")
-            print(f"Database file size: {os.path.getsize(DB_PATH)} bytes")
-        else:
-            print(f"WARNING: Database file was not created at {DB_PATH}")
-            
-    except Exception as e:
-        print(f"Error initializing database: {str(e)}")
-        raise
-
-ADMIN_PASSWORD = os.environ.get('RECIPE_ADMIN_PASSWORD', 'changeme')  # Set in your environment for security
-
 class Recipe(db.Model):
+    __tablename__ = 'recipe'  # Explicitly set table name
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     ingredients = db.Column(db.Text, nullable=False)
@@ -88,6 +61,42 @@ class Recipe(db.Model):
             'image_url': self.image_url,
             'created_at': self.created_at.isoformat()
         }
+
+# Initialize the database after all models are defined
+with app.app_context():
+    try:
+        print(f"Creating database tables at: {DB_PATH}")
+        
+        # Check if we can write to the directory
+        if os.access(db_dir, os.W_OK):
+            print(f"Directory {db_dir} is writable")
+        else:
+            print(f"WARNING: Directory {db_dir} is NOT writable!")
+        
+        # Drop all tables and recreate them
+        db.drop_all()  # This ensures we start fresh
+        db.create_all()
+        
+        # Verify the database was created with tables
+        if os.path.exists(DB_PATH):
+            print(f"Database file created successfully at: {DB_PATH}")
+            print(f"Database file size: {os.path.getsize(DB_PATH)} bytes")
+            
+            # Verify tables were created
+            inspector = db.inspect(db.engine)
+            tables = inspector.get_table_names()
+            print(f"Created tables: {tables}")
+            
+            if 'recipe' not in tables:
+                print("WARNING: 'recipe' table was not created!")
+        else:
+            print(f"WARNING: Database file was not created at {DB_PATH}")
+            
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+        raise
+
+ADMIN_PASSWORD = os.environ.get('RECIPE_ADMIN_PASSWORD', 'changeme')  # Set in your environment for security
 
 def get_domain_name(url):
     parsed_uri = urlparse(url)
