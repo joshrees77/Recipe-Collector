@@ -191,6 +191,11 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/')
+def home():
+    all_recipes = Recipe.query.order_by(Recipe.created_at.desc()).all()
+    return render_template('recipes.html', recipes=all_recipes)
+
+@app.route('/add', methods=['GET'])
 def index():
     return render_template('index.html', logged_in=session.get('logged_in', False))
 
