@@ -16,11 +16,14 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Create Flask app first
+app = Flask(__name__)
+
 # Get the absolute path for the database file in the instance folder
 DB_PATH = os.path.join(app.instance_path, 'recipes.db')
 DB_URI = f'sqlite:///{DB_PATH}'
 
-app = Flask(__name__)
+# Configure the app
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', DB_URI)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
