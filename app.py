@@ -16,8 +16,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Get the absolute path for the database file
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recipes.db')
+# Get the absolute path for the database file in the instance folder
+DB_PATH = os.path.join(app.instance_path, 'recipes.db')
 DB_URI = f'sqlite:///{DB_PATH}'
 
 app = Flask(__name__)
@@ -28,14 +28,14 @@ app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secre
 
 # Print current working directory and database URI for debugging
 print(f"Current working directory: {os.getcwd()}")
+print(f"Instance path: {app.instance_path}")
 print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
 print(f"Database path: {DB_PATH}")
 
-# Ensure the database directory exists
-db_dir = os.path.dirname(DB_PATH)
-if not os.path.exists(db_dir):
-    print(f"Creating database directory: {db_dir}")
-    os.makedirs(db_dir, exist_ok=True)
+# Ensure the instance directory exists
+if not os.path.exists(app.instance_path):
+    print(f"Creating instance directory: {app.instance_path}")
+    os.makedirs(app.instance_path, exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -65,35 +65,30 @@ class Recipe(db.Model):
 # Initialize the database after all models are defined
 with app.app_context():
     try:
-        print(f"Creating database tables at: {DB_PATH}")
+        print(f"Checking database at: {DB_PATH}")
         
         # Check if we can write to the directory
-        if os.access(db_dir, os.W_OK):
-            print(f"Directory {db_dir} is writable")
+        if os.access(app.instance_path, os.W_OK):
+            print(f"Directory {app.instance_path} is writable")
         else:
-            print(f"WARNING: Directory {db_dir} is NOT writable!")
+            print(f"WARNING: Directory {app.instance_path} is NOT writable!")
         
-        # Drop all tables and recreate them
-        db.drop_all()  # This ensures we start fresh
-        db.create_all()
+        # Only create tables if they don't exist
+        inspector = db.inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        print(f"Existing tables: {existing_tables}")
         
-        # Verify the database was created with tables
-        if os.path.exists(DB_PATH):
-            print(f"Database file created successfully at: {DB_PATH}")
-            print(f"Database file size: {os.path.getsize(DB_PATH)} bytes")
-            
+        if 'recipe' not in existing_tables:
+            print("Creating missing tables...")
+            db.create_all()
             # Verify tables were created
-            inspector = db.inspect(db.engine)
             tables = inspector.get_table_names()
-            print(f"Created tables: {tables}")
-            
-            if 'recipe' not in tables:
-                print("WARNING: 'recipe' table was not created!")
+            print(f"Tables after creation: {tables}")
         else:
-            print(f"WARNING: Database file was not created at {DB_PATH}")
+            print("All required tables exist, no need to create them")
             
     except Exception as e:
-        print(f"Error initializing database: {str(e)}")
+        print(f"Error checking/initializing database: {str(e)}")
         raise
 
 ADMIN_PASSWORD = os.environ.get('RECIPE_ADMIN_PASSWORD', 'changeme')  # Set in your environment for security
