@@ -21,12 +21,40 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secret in production
+
+# Print current working directory and database URI for debugging
+print(f"Current working directory: {os.getcwd()}")
+print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
 db = SQLAlchemy(app)
 
 # Initialize the database
 with app.app_context():
-    db.create_all()
-    print("Database initialized successfully.")
+    try:
+        # Get the absolute path where the database will be created
+        db_path = os.path.abspath('recipes.db')
+        print(f"Attempting to create database at: {db_path}")
+        
+        # Check if we can write to the directory
+        db_dir = os.path.dirname(db_path)
+        if os.access(db_dir, os.W_OK):
+            print(f"Directory {db_dir} is writable")
+        else:
+            print(f"WARNING: Directory {db_dir} is NOT writable!")
+        
+        # Create the database
+        db.create_all()
+        
+        # Verify the database was created
+        if os.path.exists(db_path):
+            print(f"Database file created successfully at: {db_path}")
+            print(f"Database file size: {os.path.getsize(db_path)} bytes")
+        else:
+            print(f"WARNING: Database file was not created at {db_path}")
+            
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+        raise
 
 ADMIN_PASSWORD = os.environ.get('RECIPE_ADMIN_PASSWORD', 'changeme')  # Set in your environment for security
 
@@ -217,43 +245,80 @@ def recipe_detail(recipe_id):
 
 # Function to attempt to commit and push the database file
 def commit_and_push_db():
-    # Get the absolute path to the project root directory
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(project_root, 'recipes.db')
-    
-    if not os.path.exists(db_path):
-        print(f"Database file not found at {db_path}")
-        return
-
     try:
-        # Change to the project root directory before running git commands
-        original_dir = os.getcwd()
-        os.chdir(project_root)
+        # Get the actual database path from SQLAlchemy
+        db_path = db.engine.url.database
+        if db_path == ':memory:':
+            print("Database is in-memory, cannot commit")
+            return
+            
+        # Convert relative path to absolute if needed
+        if not os.path.isabs(db_path):
+            db_path = os.path.abspath(db_path)
+            
+        print(f"Looking for database at: {db_path}")
         
-        try:
-            # Ensure git is initialized and configured
-            subprocess.run(['git', 'add', db_path], check=True)
-            result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
-
-            # Check if there was anything to commit
-            if "nothing to commit" in result.stdout.lower():
-                print("No database changes to commit.")
+        if not os.path.exists(db_path):
+            # Try to find the database file in common locations
+            possible_locations = [
+                db_path,  # Original path
+                os.path.join(os.getcwd(), 'recipes.db'),  # Current directory
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recipes.db'),  # App directory
+                '/opt/render/project/src/recipes.db',  # Render's project directory
+            ]
+            
+            print("Database not found at expected location. Searching in:")
+            for loc in possible_locations:
+                print(f"  - {loc}")
+                if os.path.exists(loc):
+                    print(f"Found database at: {loc}")
+                    db_path = loc
+                    break
             else:
-                subprocess.run(['git', 'push', 'origin', 'main'], check=True)  # Adjust 'main' if your branch is different
-                print("Successfully committed and pushed database.")
+                print("Database file not found in any expected location")
+                return
 
-        finally:
-            # Always change back to the original directory
-            os.chdir(original_dir)
+        # Get the directory containing the database
+        project_root = os.path.dirname(db_path)
+        print(f"Using project root: {project_root}")
 
-    except subprocess.CalledProcessError as e:
-        print(f"Git command failed: {e}")
-        print(f"Stdout: {e.stdout}")
-        print(f"Stderr: {e.stderr}")
-    except FileNotFoundError:
-        print("Git command not found. Is Git installed on the server?")
+        try:
+            # Change to the project root directory before running git commands
+            original_dir = os.getcwd()
+            print(f"Current directory before change: {original_dir}")
+            os.chdir(project_root)
+            print(f"Changed to directory: {os.getcwd()}")
+            
+            try:
+                # Ensure git is initialized and configured
+                print(f"Adding database file: {db_path}")
+                subprocess.run(['git', 'add', db_path], check=True)
+                result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
+
+                # Check if there was anything to commit
+                if "nothing to commit" in result.stdout.lower():
+                    print("No database changes to commit.")
+                else:
+                    print("Changes detected, pushing to remote...")
+                    subprocess.run(['git', 'push', 'origin', 'main'], check=True)  # Adjust 'main' if your branch is different
+                    print("Successfully committed and pushed database.")
+
+            finally:
+                # Always change back to the original directory
+                os.chdir(original_dir)
+                print(f"Changed back to directory: {os.getcwd()}")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Git command failed: {e}")
+            print(f"Stdout: {e.stdout}")
+            print(f"Stderr: {e.stderr}")
+        except FileNotFoundError:
+            print("Git command not found. Is Git installed on the server?")
+        except Exception as e:
+            print(f"An error occurred during git operations: {e}")
+
     except Exception as e:
-        print(f"An error occurred during git operations: {e}")
+        print(f"Error in commit_and_push_db: {str(e)}")
 
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
