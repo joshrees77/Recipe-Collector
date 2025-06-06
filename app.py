@@ -290,11 +290,43 @@ def commit_and_push_db():
             print(f"Changed to directory: {os.getcwd()}")
             
             try:
-                # Check current branch and status
-                branch_result = subprocess.run(['git', 'branch', '--show-current'], 
+                # Check if we're in a git repository
+                try:
+                    subprocess.run(['git', 'rev-parse', '--is-inside-work-tree'], 
+                                 capture_output=True, check=True)
+                except subprocess.CalledProcessError:
+                    print("Not in a git repository. Initializing...")
+                    subprocess.run(['git', 'init'], check=True)
+                    subprocess.run(['git', 'remote', 'add', 'origin', 
+                                  'https://github.com/joshrees77/Recipe-Collector.git'], check=True)
+                
+                # Get all branches
+                branch_result = subprocess.run(['git', 'branch', '-a'], 
                                              capture_output=True, text=True, check=True)
-                current_branch = branch_result.stdout.strip()
+                print("Available branches:")
+                print(branch_result.stdout)
+                
+                # Check if we're in detached HEAD state
+                head_result = subprocess.run(['git', 'symbolic-ref', 'HEAD'], 
+                                           capture_output=True, text=True)
+                if head_result.returncode != 0:
+                    print("In detached HEAD state. Checking out main branch...")
+                    # Try to checkout main branch, create it if it doesn't exist
+                    try:
+                        subprocess.run(['git', 'checkout', 'main'], check=True)
+                    except subprocess.CalledProcessError:
+                        print("Creating main branch...")
+                        subprocess.run(['git', 'checkout', '-b', 'main'], check=True)
+                
+                # Verify we're on main branch
+                current_branch = subprocess.run(['git', 'branch', '--show-current'], 
+                                              capture_output=True, text=True, check=True).stdout.strip()
                 print(f"Current branch: {current_branch}")
+                
+                if not current_branch:
+                    print("Still not on a branch. Creating and switching to main...")
+                    subprocess.run(['git', 'checkout', '-b', 'main'], check=True)
+                    current_branch = 'main'
                 
                 status_result = subprocess.run(['git', 'status'], 
                                              capture_output=True, text=True, check=True)
@@ -328,7 +360,7 @@ def commit_and_push_db():
                     print(remote_result.stdout)
                     
                     # Push with verbose output
-                    push_result = subprocess.run(['git', 'push', '-v', 'origin', current_branch], 
+                    push_result = subprocess.run(['git', 'push', '-u', 'origin', current_branch], 
                                                capture_output=True, text=True, check=True)
                     print("Push result:")
                     print(push_result.stdout)
