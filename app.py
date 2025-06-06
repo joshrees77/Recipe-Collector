@@ -212,21 +212,34 @@ def recipe_detail(recipe_id):
 
 # Function to attempt to commit and push the database file
 def commit_and_push_db():
-    db_path = 'recipes.db' # Adjust if your db is elsewhere
+    # Get the absolute path to the project root directory
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(project_root, 'recipes.db')
+    
+    if not os.path.exists(db_path):
+        print(f"Database file not found at {db_path}")
+        return
+
     try:
-        # Ensure git is initialized and configured (manual step on server!)
-        # This assumes you have git installed and configured on the server
-        # And that you are in a git repository
+        # Change to the project root directory before running git commands
+        original_dir = os.getcwd()
+        os.chdir(project_root)
+        
+        try:
+            # Ensure git is initialized and configured
+            subprocess.run(['git', 'add', db_path], check=True)
+            result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
 
-        subprocess.run(['git', 'add', db_path], check=True)
-        result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
+            # Check if there was anything to commit
+            if "nothing to commit" in result.stdout.lower():
+                print("No database changes to commit.")
+            else:
+                subprocess.run(['git', 'push', 'origin', 'main'], check=True)  # Adjust 'main' if your branch is different
+                print("Successfully committed and pushed database.")
 
-        # Check if there was anything to commit
-        if "nothing to commit" in result.stdout.lower():
-             print("No database changes to commit.")
-        else:
-            subprocess.run(['git', 'push', 'origin', 'main'], check=True) # Adjust 'main' if your branch is different
-            print("Successfully committed and pushed database.")
+        finally:
+            # Always change back to the original directory
+            os.chdir(original_dir)
 
     except subprocess.CalledProcessError as e:
         print(f"Git command failed: {e}")
