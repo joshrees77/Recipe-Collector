@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}My Recipes - Recipe Collector{% endblock %}
+
+{% block content %}
+
+{% if recipes %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recipes %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <div class="highlight-bar mb-2">
+                            <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="text-decoration-none" style="color:inherit;">
+                                {{ recipe.title }}
+                            </a>
+                        </div>
+                    </h5>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        Source: <a href="{{ recipe.source_url }}" target="_blank" rel="noopener">{{ recipe.source_name }}</a>
+                    </h6>
+                    
+                    <div class="mt-3">
+                        <h6>Ingredients:</h6>
+                        <ul class="list-unstyled">
+                            {% for ingredient in recipe.ingredients.split('\n')[:5] %}
+                                <li>• {{ ingredient }}</li>
+                            {% endfor %}
+                            {% if recipe.ingredients.split('\n')|length > 5 %}
+                                <li class="text-muted">... and {{ recipe.ingredients.split('\n')|length - 5 }} more</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-outline-primary btn-sm">
+                            View Full Recipe
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted highlight-bar" style="font-size:1em;">
+                    Added on {{ recipe.created_at.strftime('%B %d, %Y') }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">No recipes yet!</h4>
+        <p>Start by adding your first recipe from the homepage.</p>
+        <hr>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Add Recipe</a>
+    </div>
+{% endif %}
+{% endblock %} 

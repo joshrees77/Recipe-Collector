@@ -1,0 +1,203 @@
+/* Custom styles for Recipe Collector */
+
+/* 90s Boxy Web Design with Blue & Pink Palette */
+
+:root {
+    --blue1: #A9D1EA;
+    --blue2: #C6E1F2;
+    --blue3: #E1F0FA;
+    --pink1: #F7E0E3;
+    --pink2: #FDB7C2;
+    --pink3: #E68FAE;
+    --border: #888;
+    --text: #222;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--blue3);
+    font-family: 'Verdana', 'Geneva', 'Tahoma', 'sans-serif';
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    flex: 1;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.navbar, .footer {
+    background: var(--blue1) !important;
+    border-bottom: 2px solid var(--border);
+    border-top: 2px solid var(--border);
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+.navbar .navbar-brand, .navbar .nav-link {
+    color: var(--text) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.navbar .nav-link.active, .navbar .nav-link:focus, .navbar .nav-link:hover {
+    background: var(--blue2) !important;
+    color: #000 !important;
+    border: 1px solid var(--border);
+    border-radius: 0 !important;
+}
+
+main.container {
+    background: var(--blue2);
+    border: 2px solid var(--border);
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.card, .card-header, .card-body, .card-footer {
+    background: var(--blue3) !important;
+    border: 2px solid var(--border) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 16px;
+}
+
+.card-header, .card-title, .card-footer {
+    background: var(--blue1) !important;
+    border-bottom: 2px solid var(--border) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 0 !important;
+}
+
+.card-title {
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+input, textarea, select, button {
+    border: 2px solid var(--border) !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    color: var(--text) !important;
+    font-family: inherit;
+    font-size: 1em;
+    box-shadow: none !important;
+    padding: 6px 8px;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--text);
+    background: var(--blue3) !important;
+}
+
+.btn, .btn-primary, .btn-danger, .btn-outline-primary, .btn-outline-secondary, .btn-link {
+    background: var(--pink2) !important;
+    color: var(--text) !important;
+    border: 2px solid var(--border) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    margin: 2px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn:hover, .btn:focus {
+    background: var(--pink3) !important;
+    color: #000 !important;
+    border: 2px solid #222 !important;
+}
+
+.alert, .breadcrumb, .list-group-item {
+    border: 2px solid var(--border) !important;
+    border-radius: 0 !important;
+    background: var(--pink1) !important;
+    color: var(--text) !important;
+    box-shadow: none !important;
+}
+
+.breadcrumb {
+    background: var(--blue1) !important;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 0 !important;
+}
+
+.list-group-item {
+    background: var(--blue3) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+}
+
+img {
+    border: 2px solid var(--border);
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: var(--blue2);
+}
+
+hr {
+    border: 0;
+    border-top: 2px solid var(--border);
+    margin: 24px 0;
+}
+
+/* Remove Bootstrap's rounded corners and shadows everywhere */
+* {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Recipe card specific styles */
+.card-subtitle a {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.card-subtitle a:hover {
+    color: #495057;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+.highlight-bar {
+    background: #FDB7C2 !important;
+    color: #222 !important;
+    border: 2px solid #888 !important;
+    border-radius: 0 !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 1.2em;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    text-align: left;
+    box-shadow: none !important;
+} 
