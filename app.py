@@ -275,24 +275,8 @@ def commit_and_push_db():
         print(f"Looking for database at: {db_path}")
         
         if not os.path.exists(db_path):
-            # Try to find the database file in common locations
-            possible_locations = [
-                db_path,  # Original path
-                os.path.join(os.getcwd(), 'recipes.db'),  # Current directory
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recipes.db'),  # App directory
-                '/opt/render/project/src/recipes.db',  # Render's project directory
-            ]
-            
-            print("Database not found at expected location. Searching in:")
-            for loc in possible_locations:
-                print(f"  - {loc}")
-                if os.path.exists(loc):
-                    print(f"Found database at: {loc}")
-                    db_path = loc
-                    break
-            else:
-                print("Database file not found in any expected location")
-                return
+            print(f"Database file not found at {db_path}")
+            return
 
         # Get the directory containing the database
         project_root = os.path.dirname(db_path)
@@ -306,17 +290,48 @@ def commit_and_push_db():
             print(f"Changed to directory: {os.getcwd()}")
             
             try:
+                # Check current branch and status
+                branch_result = subprocess.run(['git', 'branch', '--show-current'], 
+                                             capture_output=True, text=True, check=True)
+                current_branch = branch_result.stdout.strip()
+                print(f"Current branch: {current_branch}")
+                
+                status_result = subprocess.run(['git', 'status'], 
+                                             capture_output=True, text=True, check=True)
+                print("Git status:")
+                print(status_result.stdout)
+                
                 # Ensure git is initialized and configured
                 print(f"Adding database file: {db_path}")
                 subprocess.run(['git', 'add', db_path], check=True)
-                result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], capture_output=True, text=True)
+                
+                # Check what's being committed
+                diff_result = subprocess.run(['git', 'diff', '--cached'], 
+                                           capture_output=True, text=True, check=True)
+                print("Changes to be committed:")
+                print(diff_result.stdout)
+                
+                result = subprocess.run(['git', 'commit', '-m', 'Update recipes database'], 
+                                      capture_output=True, text=True, check=True)
+                print("Commit result:")
+                print(result.stdout)
 
                 # Check if there was anything to commit
                 if "nothing to commit" in result.stdout.lower():
                     print("No database changes to commit.")
                 else:
                     print("Changes detected, pushing to remote...")
-                    subprocess.run(['git', 'push', 'origin', 'main'], check=True)  # Adjust 'main' if your branch is different
+                    # Get remote info
+                    remote_result = subprocess.run(['git', 'remote', '-v'], 
+                                                 capture_output=True, text=True, check=True)
+                    print("Remote repositories:")
+                    print(remote_result.stdout)
+                    
+                    # Push with verbose output
+                    push_result = subprocess.run(['git', 'push', '-v', 'origin', current_branch], 
+                                               capture_output=True, text=True, check=True)
+                    print("Push result:")
+                    print(push_result.stdout)
                     print("Successfully committed and pushed database.")
 
             finally:
@@ -326,6 +341,8 @@ def commit_and_push_db():
 
         except subprocess.CalledProcessError as e:
             print(f"Git command failed: {e}")
+            print(f"Command: {e.cmd}")
+            print(f"Exit code: {e.returncode}")
             print(f"Stdout: {e.stdout}")
             print(f"Stderr: {e.stderr}")
         except FileNotFoundError:
