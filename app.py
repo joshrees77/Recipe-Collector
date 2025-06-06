@@ -16,8 +16,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Get the absolute path for the database file
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recipes.db')
+DB_URI = f'sqlite:///{DB_PATH}'
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///recipes.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', DB_URI)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secret in production
@@ -25,6 +29,13 @@ app.secret_key = os.environ.get('SECRET_KEY', 'devsecret')  # Set a strong secre
 # Print current working directory and database URI for debugging
 print(f"Current working directory: {os.getcwd()}")
 print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+print(f"Database path: {DB_PATH}")
+
+# Ensure the database directory exists
+db_dir = os.path.dirname(DB_PATH)
+if not os.path.exists(db_dir):
+    print(f"Creating database directory: {db_dir}")
+    os.makedirs(db_dir, exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -32,11 +43,9 @@ db = SQLAlchemy(app)
 with app.app_context():
     try:
         # Get the absolute path where the database will be created
-        db_path = os.path.abspath('recipes.db')
-        print(f"Attempting to create database at: {db_path}")
+        print(f"Attempting to create database at: {DB_PATH}")
         
         # Check if we can write to the directory
-        db_dir = os.path.dirname(db_path)
         if os.access(db_dir, os.W_OK):
             print(f"Directory {db_dir} is writable")
         else:
@@ -46,11 +55,11 @@ with app.app_context():
         db.create_all()
         
         # Verify the database was created
-        if os.path.exists(db_path):
-            print(f"Database file created successfully at: {db_path}")
-            print(f"Database file size: {os.path.getsize(db_path)} bytes")
+        if os.path.exists(DB_PATH):
+            print(f"Database file created successfully at: {DB_PATH}")
+            print(f"Database file size: {os.path.getsize(DB_PATH)} bytes")
         else:
-            print(f"WARNING: Database file was not created at {db_path}")
+            print(f"WARNING: Database file was not created at {DB_PATH}")
             
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
