@@ -522,7 +522,7 @@ def edit_recipe(recipe_id):
         db.session.commit()
         flash('Recipe updated.', 'success')
         return redirect(url_for('recipe_detail', recipe_id=recipe.id))
-    return render_template('edit_recipe.html', recipe=recipe)
+    return render_template('edit_recipe.html', recipe=recipe, logged_in=session.get('logged_in', False))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080) 
