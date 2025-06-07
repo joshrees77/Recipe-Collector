@@ -3,24 +3,109 @@
 {% block title %}Login - Recipe Collector{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card mt-5">
-            <div class="card-header text-center">
-                <h2>Login</h2>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required autofocus>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
-            </div>
+<div class="login-container">
+    <h1 class="page-title">Admin Login</h1>
+    
+    {% if not session.logged_in %}
+    <form action="{{ url_for('login') }}" method="post" class="login-form">
+        <div class="form-group">
+            <label for="password" class="form-label-90s">Password:</label>
+            <input type="password" name="password" id="password" class="form-control-90s" required>
         </div>
-    </div>
+        <button type="submit" class="90s-btn-primary">Login</button>
+    </form>
+    {% else %}
+    <p class="logged-in-message 90s-alert">You are already logged in.</p>
+    <a href="{{ url_for('logout') }}" class="90s-btn-secondary">Logout</a>
+    {% endif %}
 </div>
+
+<style>
+/* Global body styling is in base.html */
+
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #000;
+    background-color: #e1f0fa; /* Lighter blue background */
+    box-shadow: 4px 4px #000;
+}
+
+.page-title {
+    color: #000; /* Black text */
+    background-color: #ffb1b1; /* Pinkish-red background */
+    padding: 8px;
+    border: 1px solid #000;
+    text-align: center;
+    font-weight: bold;
+    font-size: 2em;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.login-form {
+    background: #a9d1ea; /* Darker blue background for the form itself */
+    padding: 20px;
+    border: 1px solid #000;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label-90s {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control-90s {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px inset #000; /* 90s input border with 3D effect */
+    background-color: #e1f0fa; /* Lighter blue input background */
+    font-family: 'Arial', sans-serif;
+    color: #000;
+}
+
+.90s-btn-primary,
+.90s-btn-secondary {
+    background-color: #ffb1b1; /* Pinkish-red button */
+    color: #000; /* Black text */
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0; /* Sharp corners */
+    cursor: pointer;
+    transition: none; /* Remove smooth transitions */
+    font-family: 'Arial', sans-serif;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px; /* Space between buttons */
+}
+
+.90s-btn-primary:hover,
+.90s-btn-secondary:hover {
+    background-color: #e09b9b; /* Slightly darker pink on hover */
+    box-shadow: none; /* No shadow change */
+}
+
+.logged-in-message.90s-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0; /* Sharp corners */
+    font-family: 'Arial', sans-serif;
+    background-color: #a9d1ea; /* Darker blue background */
+    color: #000; /* Black text */
+    text-align: center;
+}
+
+.90s-alert a {
+    color: #0000ff; /* Blue link */
+    text-decoration: underline;
+}
+</style>
 {% endblock %} 

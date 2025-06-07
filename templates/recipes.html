@@ -3,55 +3,159 @@
 {% block title %}My Recipes - Recipe Collector{% endblock %}
 
 {% block content %}
-
-{% if recipes %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {% for recipe in recipes %}
-        <div class="col">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <div class="highlight-bar mb-2">
-                            <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="text-decoration-none" style="color:inherit;">
-                                {{ recipe.title }}
-                            </a>
-                        </div>
-                    </h5>
-                    <h6 class="card-subtitle mb-2 text-muted">
-                        Source: <a href="{{ recipe.source_url }}" target="_blank" rel="noopener">{{ recipe.source_name }}</a>
-                    </h6>
-                    
-                    <div class="mt-3">
-                        <h6>Ingredients:</h6>
-                        <ul class="list-unstyled">
-                            {% for ingredient in recipe.ingredients.split('\n')[:5] %}
-                                <li>• {{ ingredient }}</li>
-                            {% endfor %}
-                            {% if recipe.ingredients.split('\n')|length > 5 %}
-                                <li class="text-muted">... and {{ recipe.ingredients.split('\n')|length - 5 }} more</li>
-                            {% endif %}
-                        </ul>
-                    </div>
-
-                    <div class="mt-3">
-                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-outline-primary btn-sm">
-                            View Full Recipe
-                        </a>
-                    </div>
-                </div>
-                <div class="card-footer text-muted highlight-bar" style="font-size:1em;">
-                    Added on {{ recipe.created_at.strftime('%B %d, %Y') }}
-                </div>
+<div class="recipes-grid">
+    {% for recipe in recipes %}
+    <div class="recipe-card">
+        <div class="recipe-content-area">
+            <h2 class="recipe-title-box">{{ recipe.title }}</h2>
+            {% if recipe.image_url %}
+            <div class="recipe-image">
+                <img src="{{ url_for('uploaded_file', filename=recipe.image_url) }}" alt="{{ recipe.title }}">
             </div>
+            {% endif %}
+            {% if recipe.my_comment %}
+            <div class="my-comment">
+                {{ recipe.my_comment }}
+            </div>
+            {% endif %}
+            <div class="recipe-source">
+                Source: {{ recipe.source_name }}
+            </div>
+            <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="view-full-recipe-button">
+                VIEW FULL RECIPE
+            </a>
         </div>
-        {% endfor %}
+        <div class="recipe-date-box">
+            ADDED ON {{ recipe.created_at.strftime('%B %d, %Y') | upper }}
+        </div>
     </div>
-{% else %}
-    <div class="alert alert-info">
-        <h4 class="alert-heading">No recipes yet!</h4>
-        <p>Start by adding your first recipe from the homepage.</p>
-        <hr>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Add Recipe</a>
-    </div>
-{% endif %}
+    {% endfor %}
+</div>
+
+<style>
+body {
+    background-color: #e0e0e0; /* Very light gray, matching the area behind cards */
+    font-family: 'Arial', sans-serif; /* A more common 90s-era sans-serif font */
+    color: #000; /* Default text color */
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.recipe-card {
+    background: #e1f0fa; /* Lighter blue for card background */
+    border-radius: 0; /* Sharp corners */
+    box-shadow: none; /* No shadow */
+    border: 1px solid #000; /* Black border */
+    transition: none; /* No animations */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.recipe-card:hover {
+    transform: none; /* No scaling */
+    box-shadow: none; /* No shadow change */
+    border: 1px solid #000; /* Keep border consistent */
+}
+
+.recipe-content-area {
+    padding: 15px;
+    flex-grow: 1; /* Allow content area to take available space */
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-title-box {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+    color: #000; /* Black text, matching image */
+    background-color: #ffb1b1; /* Pinkish-red background, matching image */
+    padding: 8px;
+    border: 1px solid #000; /* Black border, matching image */
+    text-align: center;
+    font-weight: bold;
+    text-shadow: none; /* No shadow for card titles */
+}
+
+.recipe-image {
+    width: 100%;
+    height: 180px; /* Adjusted height for less prominence, matching image */
+    overflow: hidden;
+    border-bottom: 1px solid #000; /* Separator for image */
+    margin-bottom: 10px; /* Space between image and next element */
+}
+
+.recipe-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.my-comment {
+    font-size: 0.9em;
+    color: #333; /* Slightly darker gray for comment text */
+    margin: 10px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    background-color: transparent; /* No specific background */
+    padding: 0; /* No padding */
+    border: none; /* No border */
+}
+
+.recipe-source {
+    font-size: 0.8em;
+    color: #555; /* Darker gray for source text */
+    margin-top: auto; /* Push to bottom */
+    padding-top: 10px;
+    border-top: 1px solid #ccc; /* Lighter separator, matching image */
+}
+
+.view-full-recipe-button {
+    display: inline-block;
+    background-color: #ffb1b1; /* Pinkish-red button, matching image */
+    color: #000; /* Black text, matching image */
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: 1px solid #000; /* Black border, matching image */
+    border-radius: 0; /* Sharp corners */
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none; /* Remove underline */
+    margin-top: 15px;
+    align-self: flex-start; /* Align to the left, matching image */
+}
+
+.view-full-recipe-button:hover {
+    background-color: #e09b9b; /* Slightly darker pink on hover */
+}
+
+.recipe-date-box {
+    background-color: #ffb1b1; /* Pinkish-red background, matching image */
+    color: #000; /* Black text, matching image */
+    padding: 8px;
+    border-top: 1px solid #000; /* Top border, matching image */
+    border-bottom: 1px solid #000; /* Bottom border, matching image */
+    text-align: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-top: auto; /* Push to bottom of card */
+}
+
+@media (max-width: 768px) {
+    .recipes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        padding: 10px;
+    }
+}
+</style>
 {% endblock %} 

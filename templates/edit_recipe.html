@@ -3,38 +3,128 @@
 {% block title %}Edit Recipe - {{ recipe.title }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <div class="card mt-5">
-                <div class="card-header text-center">
-                    <h2>Edit Recipe</h2>
-                    <h5 class="text-muted">{{ recipe.title }}</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" value="{{ recipe.title }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="ingredients" class="form-label">Ingredients (one per line)</label>
-                            <textarea class="form-control" id="ingredients" name="ingredients" rows="8" required>{{ recipe.ingredients }}</textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="instructions" class="form-label">Instructions (one step per line)</label>
-                            <textarea class="form-control" id="instructions" name="instructions" rows="10" required>{{ recipe.instructions }}</textarea>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </div>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-link">Back to Recipe</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="edit-recipe-container">
+    <h1 class="page-title">Edit Recipe: {{ recipe.title }}</h1>
+
+    {% if not logged_in %}
+    <div class="alert alert-warning 90s-alert">
+        Please <a href="{{ url_for('login') }}">log in</a> to edit recipes.
     </div>
+    {% else %}
+    <form action="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" method="post" class="edit-recipe-form">
+        <div class="form-group">
+            <label for="title" class="form-label-90s">Title:</label>
+            <input type="text" name="title" id="title" class="form-control-90s" value="{{ recipe.title }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="my_comment" class="form-label-90s">My Comment:</label>
+            <textarea name="my_comment" id="my_comment" class="form-control-90s" rows="3">{{ recipe.my_comment or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="ingredients" class="form-label-90s">Ingredients:</label>
+            <textarea name="ingredients" id="ingredients" class="form-control-90s" rows="10" required>{{ recipe.ingredients }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="instructions" class="form-label-90s">Instructions:</label>
+            <textarea name="instructions" id="instructions" class="form-control-90s" rows="10" required>{{ recipe.instructions }}</textarea>
+        </div>
+
+        <button type="submit" class="90s-btn-primary">Update Recipe</button>
+        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="90s-btn-secondary">Cancel</a>
+    </form>
+    {% endif %}
 </div>
+
+<style>
+.edit-recipe-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #000;
+    background-color: #a9d1ea; /* Lighter blue */
+    box-shadow: 4px 4px #000;
+}
+
+.page-title {
+    color: #000; /* Black text */
+    background-color: #ffb1b1; /* Pinkish-red background */
+    padding: 8px;
+    border: 1px solid #000;
+    text-align: center;
+    font-weight: bold;
+    font-size: 2em;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.edit-recipe-form {
+    background: #a9d1ea; /* Darker blue background for the form itself */
+    padding: 20px;
+    border: 1px solid #000;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label-90s {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control-90s {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px inset #000; /* 90s input border with 3D effect */
+    background-color: #e1f0fa; /* Lighter blue input background */
+    font-family: 'Arial', sans-serif;
+    color: #000;
+}
+
+textarea.form-control-90s {
+    resize: vertical;
+}
+
+.90s-btn-primary,
+.90s-btn-secondary {
+    background-color: #ffb1b1; /* Pinkish-red button */
+    color: #000; /* Black text */
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0; /* Sharp corners */
+    cursor: pointer;
+    transition: none; /* Remove smooth transitions */
+    font-family: 'Arial', sans-serif;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px; /* Space between buttons */
+}
+
+.90s-btn-primary:hover,
+.90s-btn-secondary:hover {
+    background-color: #e09b9b; /* Slightly darker pink on hover */
+    box-shadow: none; /* No shadow change */
+}
+
+.90s-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0; /* Sharp corners */
+    font-family: 'Arial', sans-serif;
+    background-color: #a9d1ea; /* Darker blue background */
+    color: #000; /* Black text */
+}
+
+.90s-alert a {
+    color: #0000ff; /* Blue link */
+    text-decoration: underline;
+}
+</style>
 {% endblock %} 

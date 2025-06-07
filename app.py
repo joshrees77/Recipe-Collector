@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import subprocess
+from flask_migrate import Migrate  # Import Migrate
+from PIL import Image # Import Image from Pillow
 load_dotenv()
 
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
@@ -42,6 +44,8 @@ if not os.path.exists(app.instance_path):
 
 db = SQLAlchemy(app)
 
+migrate = Migrate(app, db)  # Initialize Flask-Migrate
+
 class Recipe(db.Model):
     __tablename__ = 'recipe'  # Explicitly set table name
     id = db.Column(db.Integer, primary_key=True)
@@ -50,8 +54,9 @@ class Recipe(db.Model):
     instructions = db.Column(db.Text, nullable=False)
     source_url = db.Column(db.String(500), nullable=False)
     source_name = db.Column(db.String(200), nullable=False)
-    image_url = db.Column(db.String(500), nullable=True)  # New field
+    image_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    my_comment = db.Column(db.Text, nullable=True)  # New field for your personal comment
 
     def to_dict(self):
         return {
@@ -62,7 +67,8 @@ class Recipe(db.Model):
             'source_url': self.source_url,
             'source_name': self.source_name,
             'image_url': self.image_url,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'my_comment': self.my_comment,
         }
 
 # Initialize the database after all models are defined
@@ -222,6 +228,29 @@ def extract_recipe(url):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def crop_to_square(filepath):
+    try:
+        img = Image.open(filepath)
+        width, height = img.size
+
+        # Calculate the size of the square crop
+        new_size = min(width, height)
+
+        # Calculate cropping box
+        left = (width - new_size) / 2
+        top = (height - new_size) / 2
+        right = (width + new_size) / 2
+        bottom = (height + new_size) / 2
+
+        # Crop the image
+        img_cropped = img.crop((left, top, right, bottom))
+
+        # Save the cropped image, overwriting the original
+        img_cropped.save(filepath)
+        print(f"Image cropped to square: {filepath}")
+    except Exception as e:
+        print(f"Error cropping image {filepath}: {e}")
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -243,7 +272,7 @@ def logout():
 @app.route('/')
 def home():
     all_recipes = Recipe.query.order_by(Recipe.created_at.desc()).all()
-    return render_template('recipes.html', recipes=all_recipes)
+    return render_template('recipes.html', recipes=all_recipes, logged_in=session.get('logged_in', False))
 
 @app.route('/add', methods=['GET'])
 def index():
@@ -252,12 +281,12 @@ def index():
 @app.route('/recipes')
 def recipes():
     all_recipes = Recipe.query.order_by(Recipe.created_at.desc()).all()
-    return render_template('recipes.html', recipes=all_recipes)
+    return render_template('recipes.html', recipes=all_recipes, logged_in=session.get('logged_in', False))
 
 @app.route('/recipe/<int:recipe_id>')
 def recipe_detail(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
-    return render_template('recipe_detail.html', recipe=recipe)
+    return render_template('recipe_detail.html', recipe=recipe, logged_in=session.get('logged_in', False))
 
 # Function to attempt to commit and push the database file
 def commit_and_push_db():
@@ -390,6 +419,7 @@ def add_recipe():
     if not session.get('logged_in'):
         abort(403)
     url = request.form.get('url')
+    my_comment = request.form.get('my_comment')  # Get the comment from the form
     image_url = None
     # Handle file upload
     if 'image_file' in request.files:
@@ -405,6 +435,7 @@ def add_recipe():
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 counter += 1
             file.save(filepath)
+            crop_to_square(filepath) # Crop the image after saving
             image_url = filename
     if not url:
         return jsonify({'error': 'No URL provided'}), 400
@@ -416,7 +447,8 @@ def add_recipe():
             instructions=recipe_data['instructions'],
             source_url=url,
             source_name=get_domain_name(url),
-            image_url=image_url if image_url else None
+            image_url=image_url if image_url else None,
+            my_comment=my_comment  # Add the comment to the recipe
         )
         db.session.add(recipe)
         db.session.commit()
@@ -469,6 +501,7 @@ def edit_image(recipe_id):
                     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     counter += 1
                 file.save(filepath)
+                crop_to_square(filepath) # Crop the image after saving
                 recipe.image_url = filename
                 db.session.commit()
                 flash('Image updated.', 'success')
@@ -485,6 +518,7 @@ def edit_recipe(recipe_id):
         recipe.title = request.form.get('title', recipe.title)
         recipe.ingredients = request.form.get('ingredients', recipe.ingredients)
         recipe.instructions = request.form.get('instructions', recipe.instructions)
+        recipe.my_comment = request.form.get('my_comment', recipe.my_comment)
         db.session.commit()
         flash('Recipe updated.', 'success')
         return redirect(url_for('recipe_detail', recipe_id=recipe.id))
