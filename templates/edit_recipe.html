@@ -7,7 +7,7 @@
     <h1 class="page-title">Edit Recipe: {{ recipe.title }}</h1>
 
     {% if not logged_in %}
-    <div class="alert alert-warning 90s-alert">
+    <div class="alert alert-warning alert-90s">
         Please <a href="{{ url_for('login') }}">log in</a> to edit recipes.
     </div>
     {% else %}
@@ -32,8 +32,8 @@
             <textarea name="instructions" id="instructions" class="form-control-90s" rows="10" required>{{ recipe.instructions }}</textarea>
         </div>
 
-        <button type="submit" class="90s-btn-primary">Update Recipe</button>
-        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="90s-btn-secondary">Cancel</a>
+        <button type="submit" class="btn-90s-primary">Update Recipe</button>
+        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn-90s-secondary">Cancel</a>
     </form>
     {% endif %}
 </div>
@@ -78,20 +78,21 @@
 }
 
 .form-control-90s {
-    width: 100%;
+    width: calc(100% - 4px); /* Adjust for 2px border on each side */
     padding: 8px 12px;
     border: 2px inset #000; /* 90s input border with 3D effect */
     background-color: #e1f0fa; /* Lighter blue input background */
     font-family: 'Arial', sans-serif;
     color: #000;
+    box-sizing: border-box; /* Include padding and border in the element's total width */
 }
 
 textarea.form-control-90s {
     resize: vertical;
 }
 
-.90s-btn-primary,
-.90s-btn-secondary {
+.btn-90s-primary,
+.btn-90s-secondary {
     background-color: #ffb1b1; /* Pinkish-red button */
     color: #000; /* Black text */
     padding: 8px 15px;
@@ -106,13 +107,13 @@ textarea.form-control-90s {
     margin-right: 10px; /* Space between buttons */
 }
 
-.90s-btn-primary:hover,
-.90s-btn-secondary:hover {
+.btn-90s-primary:hover,
+.btn-90s-secondary:hover {
     background-color: #e09b9b; /* Slightly darker pink on hover */
     box-shadow: none; /* No shadow change */
 }
 
-.90s-alert {
+.alert-90s {
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid #000; /* Black border */
@@ -122,7 +123,7 @@ textarea.form-control-90s {
     color: #000; /* Black text */
 }
 
-.90s-alert a {
+.alert-90s a {
     color: #0000ff; /* Blue link */
     text-decoration: underline;
 }

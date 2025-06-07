@@ -7,7 +7,7 @@
     <h1 class="page-title">Add New Recipe</h1>
     
     {% if not logged_in %}
-    <div class="alert alert-warning 90s-alert">
+    <div class="alert alert-warning alert-90s">
         Please <a href="{{ url_for('login') }}">log in</a> to add recipes.
     </div>
     {% else %}
@@ -33,7 +33,7 @@
             </small>
         </div>
 
-        <button type="submit" class="btn 90s-btn-primary">Add Recipe</button>
+        <button type="submit" class="btn btn-90s-primary">Add Recipe</button>
     </form>
     {% endif %}
 </div>
@@ -98,7 +98,7 @@ textarea.form-control-90s {
     min-height: 100px;
 }
 
-.btn.90s-btn-primary {
+.btn.btn-90s-primary {
     background-color: #ffb1b1; /* Pinkish-red button */
     color: #000; /* Black text */
     padding: 8px 15px;
@@ -112,12 +112,12 @@ textarea.form-control-90s {
     display: inline-block;
 }
 
-.btn.90s-btn-primary:hover {
+.btn.btn-90s-primary:hover {
     background-color: #e09b9b; /* Slightly darker pink on hover */
     box-shadow: none; /* No shadow change */
 }
 
-.90s-alert {
+.alert-90s {
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid #000; /* Black border */
@@ -127,7 +127,7 @@ textarea.form-control-90s {
     color: #000; /* Black text */
 }
 
-.90s-alert a {
+.alert-90s a {
     color: #0000ff; /* Blue link */
     text-decoration: underline;
 }
