@@ -418,9 +418,11 @@ def commit_and_push_db():
 def add_recipe():
     if not session.get('logged_in'):
         abort(403)
+    
     url = request.form.get('url')
-    my_comment = request.form.get('my_comment')  # Get the comment from the form
+    my_comment = request.form.get('my_comment')
     image_url = None
+
     # Handle file upload
     if 'image_file' in request.files:
         file = request.files['image_file']
@@ -437,28 +439,46 @@ def add_recipe():
             file.save(filepath)
             crop_to_square(filepath) # Crop the image after saving
             image_url = filename
-    if not url:
-        return jsonify({'error': 'No URL provided'}), 400
+
     try:
-        recipe_data = extract_recipe(url)
-        recipe = Recipe(
-            title=recipe_data['title'],
-            ingredients=recipe_data['ingredients'],
-            instructions=recipe_data['instructions'],
-            source_url=url,
-            source_name=get_domain_name(url),
-            image_url=image_url if image_url else None,
-            my_comment=my_comment  # Add the comment to the recipe
-        )
+        if url:
+            # URL scraping mode
+            recipe_data = extract_recipe(url)
+            recipe = Recipe(
+                title=recipe_data['title'],
+                ingredients=recipe_data['ingredients'],
+                instructions=recipe_data['instructions'],
+                source_url=url,
+                source_name=get_domain_name(url),
+                image_url=image_url if image_url else None,
+                my_comment=my_comment
+            )
+        else:
+            # Manual entry mode
+            title = request.form.get('title')
+            ingredients = request.form.get('ingredients')
+            instructions = request.form.get('instructions')
+            source_name = request.form.get('source_name')
+            source_url = request.form.get('source_url', '')  # Optional
+
+            if not all([title, ingredients, instructions, source_name]):
+                return jsonify({'error': 'Missing required fields'}), 400
+
+            recipe = Recipe(
+                title=title,
+                ingredients=ingredients,
+                instructions=instructions,
+                source_url=source_url if source_url else '',
+                source_name=source_name,
+                image_url=image_url if image_url else None,
+                my_comment=my_comment
+            )
+
         db.session.add(recipe)
         db.session.commit()
         
-        # *** WARNING: Attempting to commit and push DB file - NOT RECOMMENDED ***
-        # This is unreliable and has significant drawbacks (data loss on deploy, git issues, security)
-        # You MUST manually set up git on the server for this to have any chance of working.
-        # The database file on the server is still ephemeral and will be lost on redeploy.
-        commit_and_push_db() # Call the function after saving the recipe
-        # *************************************************************************
+        # Attempt to commit and push DB file
+        commit_and_push_db()
 
         return redirect(url_for('recipes'))
     except Exception as e:

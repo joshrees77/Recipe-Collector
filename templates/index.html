@@ -11,11 +11,50 @@
         Please <a href="{{ url_for('login') }}">log in</a> to add recipes.
     </div>
     {% else %}
+    <div class="entry-type-toggle">
+        <button type="button" class="btn-90s-primary toggle-btn active" data-mode="url">Add from URL</button>
+        <button type="button" class="btn-90s-primary toggle-btn" data-mode="manual">Add Manually</button>
+    </div>
+
     <form action="{{ url_for('add_recipe') }}" method="post" enctype="multipart/form-data" class="add-recipe-form">
-        <div class="form-group">
-            <label for="url" class="form-label-90s">Recipe URL:</label>
-            <input type="url" name="url" id="url" class="form-control-90s" required 
-                   placeholder="Enter the URL of the recipe you want to add">
+        <div id="url-entry" class="entry-section">
+            <div class="form-group">
+                <label for="url" class="form-label-90s">Recipe URL:</label>
+                <input type="url" name="url" id="url" class="form-control-90s" 
+                       placeholder="Enter the URL of the recipe you want to add">
+            </div>
+        </div>
+
+        <div id="manual-entry" class="entry-section" style="display: none;">
+            <div class="form-group">
+                <label for="title" class="form-label-90s">Recipe Title:</label>
+                <input type="text" name="title" id="title" class="form-control-90s" required
+                       placeholder="Enter the recipe title">
+            </div>
+
+            <div class="form-group">
+                <label for="ingredients" class="form-label-90s">Ingredients:</label>
+                <textarea name="ingredients" id="ingredients" class="form-control-90s" rows="10" required
+                          placeholder="Enter ingredients, one per line"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="instructions" class="form-label-90s">Instructions:</label>
+                <textarea name="instructions" id="instructions" class="form-control-90s" rows="10" required
+                          placeholder="Enter instructions, one per line"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="source_name" class="form-label-90s">Source Name:</label>
+                <input type="text" name="source_name" id="source_name" class="form-control-90s" required
+                       placeholder="Enter the source name (e.g., 'My Cookbook', 'Family Recipe')">
+            </div>
+
+            <div class="form-group">
+                <label for="source_url" class="form-label-90s">Source URL (optional):</label>
+                <input type="url" name="source_url" id="source_url" class="form-control-90s"
+                       placeholder="Enter the source URL if available">
+            </div>
         </div>
 
         <div class="form-group">
@@ -40,13 +79,13 @@
 
 <style>
 body {
-    background-color: #e0e0e0; /* Consistent light gray background */
+    background-color: #e1f0fa; /* Consistent light gray background */
     font-family: 'Arial', sans-serif;
     color: #000;
 }
 
 .add-recipe-container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 20px auto;
     padding: 20px;
     border: 1px solid #000;
@@ -64,6 +103,35 @@ body {
     font-size: 2em;
     margin-top: 0;
     margin-bottom: 20px;
+}
+
+.entry-type-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.toggle-btn {
+    background-color: #e1f0fa; /* Lighter blue when not active */
+    color: #000;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: 1px solid #000;
+    border-radius: 0;
+    cursor: pointer;
+    transition: none;
+    font-family: 'Arial', sans-serif;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.toggle-btn.active {
+    background-color: #ffb1b1; /* Pinkish-red when active */
+}
+
+.toggle-btn:hover {
+    background-color: #e09b9b;
 }
 
 .add-recipe-form {
@@ -139,4 +207,47 @@ textarea.form-control-90s {
     color: #555;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+    const urlSection = document.getElementById('url-entry');
+    const manualSection = document.getElementById('manual-entry');
+    const urlInput = document.getElementById('url');
+    const manualInputs = document.querySelectorAll('#manual-entry input, #manual-entry textarea');
+
+    function setActiveMode(mode) {
+        // Update button styles
+        toggleBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        // Show/hide sections
+        urlSection.style.display = mode === 'url' ? 'block' : 'none';
+        manualSection.style.display = mode === 'manual' ? 'block' : 'none';
+
+        // Update required attributes
+        if (mode === 'url') {
+            urlInput.required = true;
+            manualInputs.forEach(input => input.required = false);
+        } else {
+            urlInput.required = false;
+            manualInputs.forEach(input => {
+                if (input.id !== 'source_url' && input.id !== 'my_comment') {
+                    input.required = true;
+                }
+            });
+        }
+    }
+
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setActiveMode(btn.dataset.mode);
+        });
+    });
+
+    // Initialize with URL mode
+    setActiveMode('url');
+});
+</script>
 {% endblock %} 
